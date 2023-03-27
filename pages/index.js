@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 
 import Fuse from 'fuse.js';
@@ -7,11 +7,11 @@ import _ from 'lodash';
 import styles from '../styles/Home.module.css';
 import CodeSampleModal from '../components/CodeSampleModal';
 
-export default function Start({ countries }) {
-  const [results, setResults] = useState(countries);
+export default function Start({ catFacts }) {
+  const [results, setResults] = useState(catFacts);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const fuse = new Fuse(countries, {
-    keys: ['name'],
+  const fuse = new Fuse(catFacts, {
+    keys: ['fact'],
     threshold: 0.3,
   });
 
@@ -29,18 +29,14 @@ export default function Start({ countries }) {
 
       <main className={styles.container}>
         <h1 className={styles.title}>
-          Powered by <a href="https://nextjs.org">Next.js!</a>
+          Whiskers R We 
         </h1>
 
-        <div className={styles.heroImage}>
-          <img src="large-image.jpg" alt="Large Image" />
-        </div>
-
         <div>
-          <h2 className={styles.secondaryHeading}>Population Lookup</h2>
+          <h2 className={styles.secondaryHeading}>MEOW</h2>
           <input
             type="text"
-            placeholder="Country search..."
+            placeholder="Search cat facts..."
             className={styles.input}
             onChange={async (e) => {
               const { value } = e.currentTarget;
@@ -51,7 +47,7 @@ export default function Start({ countries }) {
 
               const updatedResults = searchResult.length
                 ? searchResult
-                : countries;
+                : catFacts;
               setResults(updatedResults);
 
               // Fake analytics hit
@@ -61,20 +57,19 @@ export default function Start({ countries }) {
             }}
           />
 
-          <ul className={styles.countries}>
-            {results.map((country) => (
-              <li key={country.cca2} className={styles.country}>
-                <p>
-                  {country.name} - {country.population.toLocaleString()}
-                </p>
+        <ul className={styles.countries}>
+            {results.map((catFact, index) => (
+              <li key={index} className={styles.catFact}>
+                <img src={catFact.imageUrl} alt={`Cat ${index + 1}`} />
+                <p>{catFact.fact}</p>
               </li>
             ))}
           </ul>
         </div>
 
         <div className={styles.codeSampleBlock}>
-          <h2 className={styles.secondaryHeading}>Code Sample</h2>
-          <p>Ever wondered how to write a function that prints Hello World?</p>
+          <h2 className={styles.secondaryHeading}>DO YOU REALLY LIKE CATS?</h2>
+          <p>Wanna be smothered</p>
           <button onClick={() => setIsModalOpen(true)}>Show Me</button>
           <CodeSampleModal
             isOpen={isModalOpen}
@@ -84,31 +79,32 @@ export default function Start({ countries }) {
       </main>
 
       <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=learn&&utm_campaign=core-web-vitals"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by
-          <span className={styles.logo}>
-            <img src="/vercel.svg" alt="Vercel Logo" />
-          </span>
-        </a>
+       meow
       </footer>
     </div>
   );
 }
 
 export async function getServerSideProps() {
-  const response = await fetch('https://restcountries.com/v3.1/all');
-  const countries = await response.json();
+  const response = await fetch('https://catfact.ninja/facts?limit=10');
+  const data = await response.json();
+
+  const fetchRandomCatImages = async () => {
+    const response = await fetch(
+      `https://api.thecatapi.com/v1/images/search?limit=10`
+    );
+    const data = await response.json();
+    return data.map((image) => image.url);
+  };
+
+  const images = await fetchRandomCatImages();
 
   return {
     props: {
-      countries: countries.map((country) => ({
-        name: country.name.common,
-        cca2: country.cca2,
-        population: country.population,
+      catFacts: data.data.map((catFact, index) => ({
+        fact: catFact.fact,
+        length: catFact.length,
+        imageUrl: images[index],
       })),
     },
   };
